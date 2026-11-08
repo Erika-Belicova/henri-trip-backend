@@ -21,6 +21,15 @@ public class GuideDayMapper {
     public GuideDayMapper(ModelMapper modelMapper, ActivityMapper activityMapper) {
         this.modelMapper = modelMapper;
         this.activityMapper = activityMapper;
+
+        configureMappings();
+    }
+
+    // configure mappings that require manual handling
+    private void configureMappings() {
+        modelMapper.typeMap(GuideDayRequestDTO.class, GuideDay.class)
+                .addMappings(mapper ->
+                        mapper.skip(GuideDay::setActivities));
     }
 
     // convert a GuideDay entity to a GuideDayResponseDTO with activities

@@ -8,6 +8,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -53,6 +54,17 @@ public class GuideMapper {
     // update an existing Guide entity from a GuideUpdateRequestDTO
     public void updateGuideEntityFromDTO(GuideUpdateRequestDTO requestDTO, Guide guide) {
         modelMapper.map(requestDTO, guide);
+
+        // replace the existing option collections with the updated values
+        replaceCollection(guide.getTransports(), requestDTO.getTransports());
+        replaceCollection(guide.getSeasons(), requestDTO.getSeasons());
+        replaceCollection(guide.getAudiences(), requestDTO.getAudiences());
+    }
+
+    // replace the contents of an existing collection without replacing its instance
+    private <T> void replaceCollection(Set<T> target, Set<T> source) {
+        target.clear();
+        target.addAll(source);
     }
 
     // convert a list of Guide entities to a list of GuideResponseDTOs
