@@ -9,6 +9,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 
+/**
+ * Service responsible for generating JWT access tokens.
+ * Signs tokens using the HS256 algorithm.
+ */
 @Service
 public class JWTService {
 
@@ -38,7 +42,7 @@ public class JWTService {
                         jwtProperties.getAccessTokenDuration()
                 ))
                 .subject(userDetails.getId().toString())
-                .claim("role", userDetails.getRole())
+                .claim("role", "ROLE_" + userDetails.getUserRole().name())
                 .build();
 
         // sign the token using the configured JWT encoder and HS256 algorithm
