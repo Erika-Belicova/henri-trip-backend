@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -50,6 +51,21 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // handles authenticated users attempting to access unauthorized resources
+    @ExceptionHandler(AuthorizationDeniedException.class)
+    public ResponseEntity<@NonNull ApiErrorResponseDTO> handleAuthorizationDenied(
+            @NonNull AuthorizationDeniedException exception,
+            @NonNull HttpServletRequest request) {
+
+        logger.debug("Access denied: {}", exception.getMessage());
+
+        return buildErrorResponse(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to access this resource",
+                request
+        );
+    }
+
     // handles failed authentication attempts
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<@NonNull ApiErrorResponseDTO> handleBadCredentials(
@@ -61,6 +77,21 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(
                 HttpStatus.UNAUTHORIZED,
                 "Invalid email or password",
+                request
+        );
+    }
+
+    // handles attempts to create users with an existing email address
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<@NonNull ApiErrorResponseDTO> handleDuplicateEmail(
+            @NonNull DuplicateEmailException exception,
+            @NonNull HttpServletRequest request) {
+
+        logger.debug("Duplicate email address: {}", exception.getMessage());
+
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
                 request
         );
     }
