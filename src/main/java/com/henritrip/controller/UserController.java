@@ -12,6 +12,7 @@ import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,13 +27,30 @@ import java.util.List;
 )
 @RestController
 @RequestMapping("/api/users")
-@PreAuthorize("hasRole('ADMIN')")
 public class UserController {
 
     private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    @Operation(
+            summary = "Retrieve the authenticated user",
+            description = "Returns the account information of the authenticated user."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Authentication required"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @GetMapping("/me")
+    public ResponseEntity<@NonNull UserResponseDTO> getCurrentUser(
+            Authentication authentication
+    ) {
+        Long userId = Long.parseLong(authentication.getName());
+
+        return ResponseEntity.ok(userService.getUserById(userId));
     }
 
     @Operation(
@@ -44,6 +62,7 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Authentication required"),
             @ApiResponse(responseCode = "403", description = "Administrator access required")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<@NonNull List<UserResponseDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
@@ -57,6 +76,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User retrieved successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{userId}")
     public ResponseEntity<@NonNull UserResponseDTO> getUserById(
             @PathVariable Long userId
@@ -73,6 +93,7 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid request"),
             @ApiResponse(responseCode = "409", description = "Email already exists")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<@NonNull UserResponseDTO> createUser(
             @RequestBody @Valid CreateUserRequestDTO requestDTO
@@ -90,6 +111,7 @@ public class UserController {
             @ApiResponse(responseCode = "204", description = "User deleted successfully"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{userId}")
     public ResponseEntity<@NonNull Void> deleteUser(
             @PathVariable Long userId

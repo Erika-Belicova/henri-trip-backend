@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -201,6 +202,42 @@ class UserControllerTest {
         org.junit.jupiter.api.Assertions.assertFalse(
                 userRepository.existsById(testUser.getId())
         );
+    }
+
+    @Test
+    void getCurrentUserShouldReturnAuthenticatedUser() throws Exception {
+        // act & assert: retrieve the profile using the database ID in the JWT subject
+        mockMvc.perform(get(USERS_ENDPOINT + "/me")
+                        .with(jwt().jwt(jwt -> jwt
+                                .subject(testUser.getId().toString())
+                        )))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(testUser.getId()))
+                .andExpect(jsonPath("$.email").value(TEST_EMAIL))
+                .andExpect(jsonPath("$.role").value("USER"))
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+    }
+
+    @Test
+    void getCurrentUserShouldReturnUnauthorizedWhenNotAuthenticated()
+            throws Exception {
+
+        // act & assert: verify that unauthenticated requests are rejected
+        mockMvc.perform(get(USERS_ENDPOINT + "/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getCurrentUserShouldReturnNotFoundWhenUserDoesNotExist()
+            throws Exception {
+
+        // arrange: use a JWT subject that does not match an existing user
+        String unknownUserId = "999999";
+
+        // act & assert: verify that an unknown user returns 404
+        mockMvc.perform(get(USERS_ENDPOINT + "/me")
+                        .with(jwt().jwt(jwt -> jwt.subject(unknownUserId))))
+                .andExpect(status().isNotFound());
     }
 
 }
