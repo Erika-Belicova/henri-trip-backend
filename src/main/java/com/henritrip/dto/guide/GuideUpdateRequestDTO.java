@@ -4,17 +4,15 @@ import com.henritrip.model.enums.AudienceOption;
 import com.henritrip.model.enums.SeasonOption;
 import com.henritrip.model.enums.TransportOption;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.util.Set;
 
 /**
- * DTO for updating a guide's descriptive information and options.
- * Days and activities are managed through their own endpoints.
+ * DTO for updating a travel guide's descriptive information,
+ * number of days and available options.
+ * Individual activities are managed through their own endpoints.
  */
 @Data
 public class GuideUpdateRequestDTO {
@@ -29,6 +27,12 @@ public class GuideUpdateRequestDTO {
     @Schema(description = "Description of the guide",
             example = "A weekend itinerary to discover Paris")
     private String description;
+
+    @NotNull(message = "Number of days is required")
+    @Min(1)
+    @Positive(message = "Number of days must be positive")
+    @Schema(description = "Total number of days in the guide", example = "2")
+    private Integer numberOfDays;
 
     @NotEmpty(message = "At least one transport option is required")
     @Schema(description = "Available transportation options")

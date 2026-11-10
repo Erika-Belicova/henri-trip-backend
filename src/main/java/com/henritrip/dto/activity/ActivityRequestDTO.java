@@ -10,7 +10,7 @@ import lombok.Data;
 import org.hibernate.validator.constraints.URL;
 
 /**
- * DTO for creating or updating an activity within a guide day.
+ * DTO for creating an activity within a guide day.
  * Contains activity details, location information and its visit order.
  */
 @Data

@@ -14,10 +14,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Unit tests for ActivityMapper.
- * Verifies conversion between Activity entities and their request and response DTOs.
- */
 class ActivityMapperTest {
 
     private ActivityMapper activityMapper;

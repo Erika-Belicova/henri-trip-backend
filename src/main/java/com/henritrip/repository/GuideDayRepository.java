@@ -21,4 +21,10 @@ public interface GuideDayRepository extends JpaRepository<@NonNull GuideDay, @No
     // fetch a specific day belonging to a specific guide
     Optional<GuideDay> findByIdAndGuideId(Long id, Long guideId);
 
+    // check whether a day number already exists within a guide
+    boolean existsByGuideIdAndDayNumber(Long guideId, Integer dayNumber);
+
+    // check whether another day already uses the given day number within a guide
+    boolean existsByGuideIdAndDayNumberAndIdNot(Long guideId, Integer dayNumber, Long dayId);
+
 }

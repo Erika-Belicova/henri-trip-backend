@@ -21,4 +21,12 @@ public interface ActivityRepository extends JpaRepository<@NonNull Activity, @No
     // fetch a specific activity belonging to a specific guide day
     Optional<Activity> findByIdAndGuideDayId(Long id, Long guideDayId);
 
+    // check whether a visit order already exists within a guide day
+    boolean existsByGuideDayIdAndVisitOrder(Long guideDayId, Integer visitOrder);
+
+    // check whether another activity already uses the given visit order within a guide day
+    boolean existsByGuideDayIdAndVisitOrderAndIdNot(
+            Long guideDayId, Integer visitOrder, Long activityId
+    );
+
 }

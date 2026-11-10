@@ -48,4 +48,21 @@ public class GuideDay {
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
 
+    // adds an activity and establishes the bidirectional relationship
+    public void addActivity(Activity activity) {
+        if (activity == null) {
+            throw new IllegalArgumentException("Activity cannot be null");
+        }
+
+        activities.add(activity);
+        activity.setGuideDay(this);
+    }
+
+    // removes an activity and updates the relationship
+    public void removeActivity(Activity activity) {
+        if (activities.remove(activity)) {
+            activity.setGuideDay(null);
+        }
+    }
+
 }
