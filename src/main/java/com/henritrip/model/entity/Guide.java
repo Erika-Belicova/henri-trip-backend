@@ -1,4 +1,3 @@
-
 package com.henritrip.model.entity;
 
 import com.henritrip.model.enums.AudienceOption;
@@ -74,7 +73,10 @@ public class Guide {
     @Column(name = "audience", nullable = false, columnDefinition = "audience_option")
     private Set<AudienceOption> audiences = new HashSet<>();
 
-    @OneToMany(mappedBy = "guide", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "guide", cascade = CascadeType.ALL, orphanRemoval = true
+    )
+    @OrderBy("dayNumber ASC")
     private List<GuideDay> days = new ArrayList<>();
 
     @OneToMany(mappedBy = "guide", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -87,5 +89,27 @@ public class Guide {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+
+    // returns the number of days belonging to the guide
+    public Integer getNumberOfDays() {
+        return days.size();
+    }
+
+    // adds a day and establishes the bidirectional relationship
+    public void addDay(GuideDay day) {
+        if (day == null) {
+            throw new IllegalArgumentException("Guide day cannot be null");
+        }
+
+        days.add(day);
+        day.setGuide(this);
+    }
+
+    // removes a day and updates the relationship
+    public void removeDay(GuideDay day) {
+        if (days.remove(day)) {
+            day.setGuide(null);
+        }
+    }
 
 }
