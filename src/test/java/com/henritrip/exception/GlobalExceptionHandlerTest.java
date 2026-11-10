@@ -9,6 +9,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -116,6 +117,87 @@ class GlobalExceptionHandlerTest {
         assertNotNull(response.getBody());
         assertEquals("An unexpected error occurred",
                 response.getBody().getMessage());
+    }
+
+    @Test
+    void shouldReturnForbiddenForAuthorizationDenied() {
+        AuthorizationDeniedException exception =
+                new AuthorizationDeniedException("Access denied");
+
+        ResponseEntity<@NonNull ApiErrorResponseDTO> response =
+                handler.handleAuthorizationDenied(exception, request);
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(
+                "You do not have permission to access this resource",
+                response.getBody().getMessage()
+        );
+    }
+
+    @Test
+    void shouldReturnConflictForDuplicateEmail() {
+        DuplicateEmailException exception =
+                new DuplicateEmailException("Email already exists");
+
+        ResponseEntity<@NonNull ApiErrorResponseDTO> response =
+                handler.handleDuplicateEmail(exception, request);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Email already exists", response.getBody().getMessage());
+    }
+
+    @Test
+    void shouldReturnNotFoundForMissingGuide() {
+        GuideNotFoundException exception =
+                new GuideNotFoundException("Guide not found");
+
+        ResponseEntity<@NonNull ApiErrorResponseDTO> response =
+                handler.handleGuideNotFound(exception, request);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Guide not found", response.getBody().getMessage());
+    }
+
+    @Test
+    void shouldReturnNotFoundForMissingGuideDay() {
+        GuideDayNotFoundException exception =
+                new GuideDayNotFoundException("Guide day not found");
+
+        ResponseEntity<@NonNull ApiErrorResponseDTO> response =
+                handler.handleGuideDayNotFound(exception, request);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Guide day not found", response.getBody().getMessage());
+    }
+
+    @Test
+    void shouldReturnNotFoundForMissingActivity() {
+        ActivityNotFoundException exception =
+                new ActivityNotFoundException("Activity not found");
+
+        ResponseEntity<@NonNull ApiErrorResponseDTO> response =
+                handler.handleActivityNotFound(exception, request);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Activity not found", response.getBody().getMessage());
+    }
+
+    @Test
+    void shouldReturnConflictForResourceConflict() {
+        ResourceConflictException exception =
+                new ResourceConflictException("Visit order is invalid");
+
+        ResponseEntity<@NonNull ApiErrorResponseDTO> response =
+                handler.handleResourceConflict(exception, request);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Visit order is invalid", response.getBody().getMessage());
     }
 
 }
