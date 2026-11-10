@@ -1,11 +1,13 @@
 package com.henritrip.security;
 
 import com.henritrip.model.entity.User;
+import com.henritrip.model.enums.UserRole;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -27,14 +29,26 @@ public final class CustomUserDetails implements UserDetails {
         return user.getId();
     }
 
-    public String getRole() {
-        return "ROLE_" + user.getRole().name();
+    // returns the original domain enum for application-level operations
+    public UserRole getUserRole() {
+        return user.getRole();
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return user.getCreatedAt();
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return user.getUpdatedAt();
     }
 
     @Override
     @NonNull
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(getRole()));
+        return List.of(
+                // Spring Security authority string for checking role-based permissions
+                new SimpleGrantedAuthority("ROLE_" + getUserRole().name())
+        );
     }
 
     @Override
