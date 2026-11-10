@@ -111,6 +111,67 @@ public class GlobalExceptionHandler {
         );
     }
 
+    // handles requests referencing guides that cannot be found
+    @ExceptionHandler(GuideNotFoundException.class)
+    public ResponseEntity<@NonNull ApiErrorResponseDTO> handleGuideNotFound(
+            @NonNull GuideNotFoundException exception,
+            @NonNull HttpServletRequest request) {
+
+        logger.debug("Guide not found: {}", exception.getMessage());
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    // handles requests referencing guide days that cannot be found
+    @ExceptionHandler(GuideDayNotFoundException.class)
+    public ResponseEntity<@NonNull ApiErrorResponseDTO> handleGuideDayNotFound(
+            @NonNull GuideDayNotFoundException exception,
+            @NonNull HttpServletRequest request) {
+
+        logger.debug("Guide day not found: {}", exception.getMessage());
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    // handles requests referencing activities that cannot be found
+    @ExceptionHandler(ActivityNotFoundException.class)
+    public ResponseEntity<@NonNull ApiErrorResponseDTO> handleActivityNotFound(
+            @NonNull ActivityNotFoundException exception,
+            @NonNull HttpServletRequest request) {
+
+        logger.debug("Activity not found: {}", exception.getMessage());
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage(),
+                request
+        );
+    }
+
+    // handles conflicts when a requested operation cannot be completed
+    // due to the current resource state
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<@NonNull ApiErrorResponseDTO> handleResourceConflict(
+            @NonNull ResourceConflictException exception,
+            @NonNull HttpServletRequest request) {
+
+        logger.debug("Resource conflict: {}", exception.getMessage());
+
+        return buildErrorResponse(
+                HttpStatus.CONFLICT,
+                exception.getMessage(),
+                request
+        );
+    }
+
     // handles unexpected application exceptions without exposing internal details
     @ExceptionHandler(Exception.class)
     public ResponseEntity<@NonNull ApiErrorResponseDTO> handleGeneralException(
