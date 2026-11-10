@@ -27,6 +27,9 @@ public class GuideResponseDTO {
     @Schema(description = "Description of the guide")
     private String description;
 
+    @Schema(description = "Total number of days in the guide", example = "2")
+    private Integer numberOfDays;
+
     @Schema(description = "Available transportation options")
     private Set<TransportOption> transports;
 

@@ -12,7 +12,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Mapper for converting between Guide entity and its DTOs.
+ * Mapper for converting between Guide entities and their request and response DTOs.
+ * Handles guide information, day counts and the mapping of associated guide days.
  */
 @Component
 public class GuideMapper {
@@ -23,51 +24,53 @@ public class GuideMapper {
     public GuideMapper(ModelMapper modelMapper, GuideDayMapper guideDayMapper) {
         this.modelMapper = modelMapper;
         this.guideDayMapper = guideDayMapper;
+
+        configureMappings();
     }
 
-    // convert a Guide entity to a GuideResponseDTO with its days and activities
+    // prevents ModelMapper from handling days automatically
+    private void configureMappings() {
+        modelMapper.typeMap(GuideRequestDTO.class, Guide.class).addMappings(
+                mapper ->
+                mapper.skip(Guide::setDays)
+        );
+    }
+
+    // converts a Guide entity to a response DTO with its itinerary
     public GuideResponseDTO toGuideResponseDTO(Guide guide) {
         GuideResponseDTO responseDTO = modelMapper.map(guide, GuideResponseDTO.class);
 
-        if (guide.getDays() != null) {
-            // map and set the list of guide days
-            responseDTO.setDays(guideDayMapper.toGuideDayResponseDTOList(guide.getDays()));
-        }
+        responseDTO.setNumberOfDays(guide.getDays().size());
+
+        responseDTO.setDays(guideDayMapper.toGuideDayResponseDTOList(guide.getDays())
+        );
 
         return responseDTO;
     }
 
-    // convert a GuideRequestDTO to a Guide entity
+    // converts a guide creation DTO to a Guide entity
     public Guide toGuideEntity(GuideRequestDTO requestDTO) {
-        Guide guide = modelMapper.map(requestDTO, Guide.class);
-
-        if (requestDTO.getDays() != null) {
-            // map and set the list of guide days
-            guide.setDays(requestDTO.getDays().stream()
-                    .map(guideDayMapper::toGuideDayEntity)
-                    .collect(Collectors.toList()));
-        }
-
-        return guide;
+        return modelMapper.map(requestDTO, Guide.class);
     }
 
-    // update an existing Guide entity from a GuideUpdateRequestDTO
+    // updates guide information without modifying its itinerary
     public void updateGuideEntityFromDTO(GuideUpdateRequestDTO requestDTO, Guide guide) {
-        modelMapper.map(requestDTO, guide);
 
-        // replace the existing option collections with the updated values
+        guide.setTitle(requestDTO.getTitle());
+        guide.setDescription(requestDTO.getDescription());
+
         replaceCollection(guide.getTransports(), requestDTO.getTransports());
         replaceCollection(guide.getSeasons(), requestDTO.getSeasons());
         replaceCollection(guide.getAudiences(), requestDTO.getAudiences());
     }
 
-    // replace the contents of an existing collection without replacing its instance
+    // replaces collection contents without replacing the collection instance
     private <T> void replaceCollection(Set<T> target, Set<T> source) {
         target.clear();
         target.addAll(source);
     }
 
-    // convert a list of Guide entities to a list of GuideResponseDTOs
+    // converts a list of Guide entities to response DTOs
     public List<GuideResponseDTO> toGuideResponseDTOList(List<Guide> guides) {
         return guides.stream()
                 .map(this::toGuideResponseDTO)

@@ -1,11 +1,10 @@
 package com.henritrip.mapper;
 
 import com.henritrip.configuration.ModelMapperConfig;
-import com.henritrip.dto.activity.ActivityRequestDTO;
 import com.henritrip.dto.guide.GuideRequestDTO;
 import com.henritrip.dto.guide.GuideResponseDTO;
 import com.henritrip.dto.guide.GuideUpdateRequestDTO;
-import com.henritrip.dto.guideday.GuideDayRequestDTO;
+import com.henritrip.dto.guideday.GuideDayResponseDTO;
 import com.henritrip.model.entity.Activity;
 import com.henritrip.model.entity.Guide;
 import com.henritrip.model.entity.GuideDay;
@@ -17,16 +16,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.modelmapper.ModelMapper;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/**
- * Unit tests for GuideMapper.
- * Verifies conversion between Guide entities and their request and response DTOs,
- * including nested guide days and activities.
- */
 class GuideMapperTest {
 
     private GuideMapper guideMapper;
@@ -40,7 +35,7 @@ class GuideMapperTest {
     }
 
     @Test
-    void toGuideEntityShouldMapRequestDTOWithDaysAndActivities() {
+    void toGuideEntityShouldMapRequestDTO() {
         // arrange
         GuideRequestDTO requestDTO = createGuideRequestDTO();
 
@@ -50,26 +45,21 @@ class GuideMapperTest {
         // assert
         assertThat(guide.getTitle()).isEqualTo(requestDTO.getTitle());
         assertThat(guide.getDescription()).isEqualTo(requestDTO.getDescription());
-        assertThat(guide.getTransports()).containsExactlyInAnyOrderElementsOf(requestDTO.getTransports());
-        assertThat(guide.getSeasons()).containsExactlyInAnyOrderElementsOf(requestDTO.getSeasons());
-        assertThat(guide.getAudiences()).containsExactlyInAnyOrderElementsOf(requestDTO.getAudiences());
 
-        assertThat(guide.getDays()).hasSize(1);
+        assertThat(guide.getTransports())
+                .containsExactlyInAnyOrderElementsOf(requestDTO.getTransports());
 
-        GuideDay guideDay = guide.getDays().get(0);
-        assertThat(guideDay.getDayNumber()).isEqualTo(1);
-        assertThat(guideDay.getActivities()).hasSize(1);
+        assertThat(guide.getSeasons())
+                .containsExactlyInAnyOrderElementsOf(requestDTO.getSeasons());
 
-        Activity activity = guideDay.getActivities().get(0);
-        assertThat(activity.getTitle()).isEqualTo("Visit the Louvre Museum");
-        assertThat(activity.getCategory()).isEqualTo(ActivityCategory.MUSEUM);
-        assertThat(activity.getVisitOrder()).isEqualTo(1);
+        assertThat(guide.getAudiences())
+                .containsExactlyInAnyOrderElementsOf(requestDTO.getAudiences());
 
-        // relationships and generated fields must be assigned separately
         assertThat(guide.getId()).isNull();
         assertThat(guide.getCreatedBy()).isNull();
-        assertThat(guideDay.getGuide()).isNull();
-        assertThat(activity.getGuideDay()).isNull();
+
+        // days are created separately
+        assertThat(guide.getDays()).isEmpty();
     }
 
     @Test
@@ -78,35 +68,49 @@ class GuideMapperTest {
         Guide guide = createGuide();
 
         // act
-        GuideResponseDTO responseDTO = guideMapper.toGuideResponseDTO(guide);
+        GuideResponseDTO responseDTO =
+                guideMapper.toGuideResponseDTO(guide);
 
         // assert
         assertThat(responseDTO.getId()).isEqualTo(guide.getId());
         assertThat(responseDTO.getTitle()).isEqualTo(guide.getTitle());
         assertThat(responseDTO.getDescription()).isEqualTo(guide.getDescription());
-        assertThat(responseDTO.getTransports()).containsExactlyInAnyOrderElementsOf(guide.getTransports());
-        assertThat(responseDTO.getSeasons()).containsExactlyInAnyOrderElementsOf(guide.getSeasons());
-        assertThat(responseDTO.getAudiences()).containsExactlyInAnyOrderElementsOf(guide.getAudiences());
+
+        assertThat(responseDTO.getTransports())
+                .containsExactlyInAnyOrderElementsOf(guide.getTransports());
+
+        assertThat(responseDTO.getSeasons())
+                .containsExactlyInAnyOrderElementsOf(guide.getSeasons());
+
+        assertThat(responseDTO.getAudiences())
+                .containsExactlyInAnyOrderElementsOf(guide.getAudiences());
+
+        assertThat(responseDTO.getNumberOfDays()).isEqualTo(1);
 
         assertThat(responseDTO.getDays()).hasSize(1);
 
-        assertThat(responseDTO.getDays().get(0).getDayNumber()).isEqualTo(1);
-        assertThat(responseDTO.getDays().get(0).getActivities()).hasSize(1);
+        GuideDayResponseDTO dayResponse = responseDTO.getDays().get(0);
 
-        assertThat(responseDTO.getDays().get(0).getActivities().get(0).getTitle())
+        assertThat(dayResponse.getDayNumber()).isEqualTo(1);
+        assertThat(dayResponse.getActivities()).hasSize(1);
+
+        assertThat(dayResponse.getActivities().get(0).getTitle())
                 .isEqualTo("Visit the Louvre Museum");
     }
+
 
     @Test
     void updateGuideEntityFromDTOShouldUpdateGuideFieldsWithoutModifyingDays() {
         // arrange
         Guide guide = createGuide();
+
         GuideDay existingDay = guide.getDays().get(0);
         Activity existingActivity = existingDay.getActivities().get(0);
 
         GuideUpdateRequestDTO requestDTO = new GuideUpdateRequestDTO();
         requestDTO.setTitle("Updated Paris Travel Guide");
         requestDTO.setDescription("Updated description");
+        requestDTO.setNumberOfDays(3);
         requestDTO.setTransports(Set.of(TransportOption.WALKING));
         requestDTO.setSeasons(Set.of(SeasonOption.SPRING));
         requestDTO.setAudiences(Set.of(AudienceOption.FRIENDS));
@@ -117,13 +121,18 @@ class GuideMapperTest {
         // assert
         assertThat(guide.getTitle()).isEqualTo(requestDTO.getTitle());
         assertThat(guide.getDescription()).isEqualTo(requestDTO.getDescription());
+
+        // number of days is managed by GuideDayService, not GuideMapper
+        assertThat(guide.getNumberOfDays()).isEqualTo(1);
         assertThat(guide.getTransports()).containsExactly(TransportOption.WALKING);
         assertThat(guide.getSeasons()).containsExactly(SeasonOption.SPRING);
         assertThat(guide.getAudiences()).containsExactly(AudienceOption.FRIENDS);
 
         // updating guide information must not replace its existing itinerary
         assertThat(guide.getDays()).containsExactly(existingDay);
-        assertThat(guide.getDays().get(0).getActivities()).containsExactly(existingActivity);
+
+        assertThat(guide.getDays().get(0).getActivities())
+                .containsExactly(existingActivity);
     }
 
     @Test
@@ -151,29 +160,23 @@ class GuideMapperTest {
                 .extracting(GuideResponseDTO::getTitle)
                 .containsExactly(firstGuide.getTitle(), secondGuide.getTitle());
 
+        assertThat(result.get(0).getNumberOfDays()).isEqualTo(1);
+        assertThat(result.get(1).getNumberOfDays()).isEqualTo(1);
+
         assertThat(result.get(0).getDays()).hasSize(1);
         assertThat(result.get(1).getDays()).hasSize(1);
     }
 
     private GuideRequestDTO createGuideRequestDTO() {
-        ActivityRequestDTO activity = new ActivityRequestDTO();
-        activity.setTitle("Visit the Louvre Museum");
-        activity.setDescription("Discover the world's largest art museums");
-        activity.setCategory(ActivityCategory.MUSEUM);
-        activity.setAddress("Rue de Rivoli, 75001 Paris, France");
-        activity.setVisitOrder(1);
-
-        GuideDayRequestDTO day = new GuideDayRequestDTO();
-        day.setDayNumber(1);
-        day.setActivities(List.of(activity));
-
         GuideRequestDTO requestDTO = new GuideRequestDTO();
+
         requestDTO.setTitle("Paris Travel Guide");
         requestDTO.setDescription("A weekend itinerary to discover Paris");
+        requestDTO.setNumberOfDays(1);
+
         requestDTO.setTransports(Set.of(TransportOption.WALKING, TransportOption.CAR));
         requestDTO.setSeasons(Set.of(SeasonOption.SPRING, SeasonOption.SUMMER));
         requestDTO.setAudiences(Set.of(AudienceOption.FAMILY, AudienceOption.FRIENDS));
-        requestDTO.setDays(List.of(day));
 
         return requestDTO;
     }
@@ -190,17 +193,20 @@ class GuideMapperTest {
         GuideDay guideDay = new GuideDay();
         guideDay.setId(1L);
         guideDay.setDayNumber(1);
-        guideDay.setActivities(List.of(activity));
+        guideDay.addActivity(activity);
 
         Guide guide = new Guide();
         guide.setId(1L);
         guide.setTitle("Paris Travel Guide");
         guide.setDescription("A weekend itinerary to discover Paris");
-        guide.setTransports(Set.of(TransportOption.WALKING, TransportOption.CAR));
-        guide.setSeasons(Set.of(SeasonOption.SPRING, SeasonOption.SUMMER));
-        guide.setAudiences(Set.of(AudienceOption.FAMILY, AudienceOption.FRIENDS));
-        guide.setDays(List.of(guideDay));
+
+        guide.setTransports(new HashSet<>(Set.of(TransportOption.WALKING, TransportOption.CAR)));
+        guide.setSeasons(new HashSet<>(Set.of(SeasonOption.SPRING, SeasonOption.SUMMER)));
+        guide.setAudiences(new HashSet<>(Set.of(AudienceOption.FAMILY, AudienceOption.FRIENDS)));
+
+        guide.addDay(guideDay);
 
         return guide;
     }
+
 }

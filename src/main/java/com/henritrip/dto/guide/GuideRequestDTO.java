@@ -1,23 +1,17 @@
 package com.henritrip.dto.guide;
 
-import com.henritrip.dto.guideday.GuideDayRequestDTO;
 import com.henritrip.model.enums.AudienceOption;
 import com.henritrip.model.enums.SeasonOption;
 import com.henritrip.model.enums.TransportOption;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
-import java.util.List;
 import java.util.Set;
 
 /**
- * DTO for creating or updating a travel guide.
- * Includes its descriptive information, available options and itinerary days.
+ * DTO for creating a travel guide.
+ * Contains its descriptive information and available options.
  */
 @Data
 public class GuideRequestDTO {
@@ -33,6 +27,12 @@ public class GuideRequestDTO {
             example = "A weekend itinerary to discover Paris")
     private String description;
 
+    @NotNull(message = "Number of days is required")
+    @Min(1)
+    @Positive(message = "Number of days must be positive")
+    @Schema(description = "Total number of days in the guide", example = "2")
+    private Integer numberOfDays;
+
     @NotEmpty(message = "At least one transport option is required")
     @Schema(description = "Available transportation options")
     private Set<@NotNull TransportOption> transports;
@@ -44,10 +44,5 @@ public class GuideRequestDTO {
     @NotEmpty(message = "At least one audience option is required")
     @Schema(description = "Intended audiences for the guide")
     private Set<@NotNull AudienceOption> audiences;
-
-    @NotEmpty(message = "A guide must contain at least one day")
-    @Valid
-    @Schema(description = "Days included in the guide")
-    private List<@NotNull @Valid GuideDayRequestDTO> days;
 
 }
